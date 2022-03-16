@@ -42,11 +42,9 @@ func reportFunc(fn, action string, tags ...Tags) {
 	if client == nil {
 		return
 	}
-	if len(tags) > 0 {
-		tags[0]["func_name"] = fn
-	}
 
-	tagArray := joinTags(tags...)
+	tagArray := JoinTags(tags...)
+	tagArray = append(tagArray, getSingleTag("func_name", fn))
 	client.Incr(fmt.Sprintf("func.%v", action), tagArray, 0.77)
 }
 
@@ -60,10 +58,9 @@ func ReportFuncTiming(tags ...Tags) StopTimerFunc {
 	}
 	t := time.Now()
 	fn := funcName()
-	if len(tags) > 0 {
-		tags[0]["func_name"] = fn
-	}
-	tagArray := joinTags(tags...)
+
+	tagArray := JoinTags(tags...)
+	tagArray = append(tagArray, getSingleTag("func_name", fn))
 
 	doneC := make(chan struct{})
 	go func(name string, start time.Time) {
@@ -101,10 +98,8 @@ func ReportClosureFuncTiming(name string, tags ...Tags) StopTimerFunc {
 		return func() {}
 	}
 	t := time.Now()
-	if len(tags) > 0 {
-		tags[0]["func_name"] = name
-	}
-	tagArray := joinTags(tags...)
+	tagArray := JoinTags(tags...)
+	tagArray = append(tagArray, getSingleTag("func_name", name))
 
 	doneC := make(chan struct{})
 	go func(name string, start time.Time) {
@@ -185,11 +180,19 @@ func joinDDTags(tags ...Tags) []string {
 	return tagArray
 }
 
-// joinTags decides how to join tags base on agent
-func joinTags(tags ...Tags) []string {
+// JoinTags decides how to join tags base on agent
+func JoinTags(tags ...Tags) []string {
 	if config.Agent == DatadogAgent {
 		return joinDDTags(tags...)
 	}
 
 	return joinTelegrafTags(tags...)
+}
+
+func getSingleTag(key, value string) string {
+	if config.Agent == DatadogAgent {
+		return fmt.Sprintf("%s:%s", key, value)
+	}
+
+	return fmt.Sprintf("%s=%s", key, value)
 }

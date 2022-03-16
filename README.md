@@ -6,12 +6,13 @@
 
 - Maintenance in one place, only need update this lib in services implementation
 
+
 ### Supports:
 
 - Telegraf
 
 - DataDog
 
-## Maintainer
+### Acknowledgement
 
-- Phuc Ta <phuc@injectivelabs.org>
+- Special thanks maintainers of injective-exchange/metrics, this package derives from this PR: https://github.com/InjectiveLabs/injective-exchange/pull/451
