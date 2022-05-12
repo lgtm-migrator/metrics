@@ -155,7 +155,7 @@ func getFuncNameFromPtr(ptr uintptr) string {
 	if len(nameParts) == 0 {
 		return ""
 	}
-	return nameParts[len(nameParts)-1]
+	return strings.TrimSuffix(nameParts[len(nameParts)-1], "-fm")
 }
 
 type Tags map[string]string
