@@ -2,6 +2,7 @@ package metrics
 
 import (
 	"fmt"
+	"reflect"
 	"runtime"
 	"strings"
 	"time"
@@ -9,8 +10,12 @@ import (
 	log "github.com/xlab/suplog"
 )
 
+func ReportFunc(fn, action string, tags ...Tags) {
+	reportFunc(fn, action, tags...)
+}
+
 func ReportFuncError(tags ...Tags) {
-	fn := funcName()
+	fn := CallerFuncName(1)
 	reportFunc(fn, "error", tags...)
 }
 
@@ -19,7 +24,7 @@ func ReportClosureFuncError(name string, tags ...Tags) {
 }
 
 func ReportFuncStatus(tags ...Tags) {
-	fn := funcName()
+	fn := CallerFuncName(1)
 	reportFunc(fn, "status", tags...)
 }
 
@@ -28,7 +33,7 @@ func ReportClosureFuncStatus(name string, tags ...Tags) {
 }
 
 func ReportFuncCall(tags ...Tags) {
-	fn := funcName()
+	fn := CallerFuncName(1)
 	reportFunc(fn, "called", tags...)
 }
 
@@ -57,7 +62,7 @@ func ReportFuncTiming(tags ...Tags) StopTimerFunc {
 		return func() {}
 	}
 	t := time.Now()
-	fn := funcName()
+	fn := CallerFuncName(1)
 
 	tagArray := JoinTags(tags...)
 	tagArray = append(tagArray, getSingleTag("func_name", fn))
@@ -131,11 +136,25 @@ func ReportClosureFuncTiming(name string, tags ...Tags) StopTimerFunc {
 	}
 }
 
-func funcName() string {
-	pc, _, _, _ := runtime.Caller(2)
-	fullName := runtime.FuncForPC(pc).Name()
+func CallerFuncName(skip int) string {
+	pc, _, _, _ := runtime.Caller(1 + skip)
+	return getFuncNameFromPtr(pc)
+}
+
+func GetFuncName(i interface{}) string {
+	return getFuncNameFromPtr(reflect.ValueOf(i).Pointer())
+}
+
+func getFuncNameFromPtr(ptr uintptr) string {
+	fullName := runtime.FuncForPC(ptr).Name()
 	parts := strings.Split(fullName, "/")
+	if len(parts) == 0 {
+		return ""
+	}
 	nameParts := strings.Split(parts[len(parts)-1], ".")
+	if len(nameParts) == 0 {
+		return ""
+	}
 	return nameParts[len(nameParts)-1]
 }
 
