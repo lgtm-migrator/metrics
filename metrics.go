@@ -9,6 +9,10 @@ import (
 	log "github.com/xlab/suplog"
 )
 
+func ReportFunc(fn, action string, tags ...Tags) {
+	reportFunc(fn, action, tags...)
+}
+
 func ReportFuncError(tags ...Tags) {
 	fn := funcName()
 	reportFunc(fn, "error", tags...)
