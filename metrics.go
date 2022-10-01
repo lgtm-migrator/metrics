@@ -37,6 +37,12 @@ func ReportFuncCall(tags ...Tags) {
 	reportFunc(fn, "called", tags...)
 }
 
+func ReportFuncCallAndTiming(tags ...Tags) StopTimerFunc {
+	fn := CallerFuncName(1)
+	reportFunc(fn, "called", tags...)
+	return reportTiming(tags...)
+}
+
 func ReportClosureFuncCall(name string, tags ...Tags) {
 	reportFunc(name, "called", tags...)
 }
@@ -56,13 +62,17 @@ func reportFunc(fn, action string, tags ...Tags) {
 type StopTimerFunc func()
 
 func ReportFuncTiming(tags ...Tags) StopTimerFunc {
+	return reportTiming(tags...)
+}
+
+func reportTiming(tags ...Tags) StopTimerFunc {
 	clientMux.RLock()
 	defer clientMux.RUnlock()
 	if client == nil {
 		return func() {}
 	}
 	t := time.Now()
-	fn := CallerFuncName(1)
+	fn := CallerFuncName(2)
 
 	tagArray := JoinTags(tags...)
 	tagArray = append(tagArray, getSingleTag("func_name", fn))
